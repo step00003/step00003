@@ -1,176 +1,246 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      background-color: rgb(196, 196, 196);
-    }
+    <title>B11035039</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
 
-    body, html {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-    }
+        .navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            transition: top 0.3s;
+            z-index: 1000;
+            opacity: 1;
+        }
 
-    .bug {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 80px; /* 16px * 5 = 80px */
-      height: 80px; /* 16px * 5 = 80px */
-      transform: translate(-50%, -50%);
-      background-image: url(img/bug.png);
-      background-size: 80px 80px; /* 16px * 5 = 80px */
-    }
+        .navbar.collapsed {
+            top: -50px;
+        }
 
-    .man {
-      position: absolute;
-      top: 0;
-      left: 0;
-      border-radius: 50%;
-      cursor: move;
-    }
+        .navbar ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-start;
+        }
 
-    .man-trail {
-      position: absolute;
-      top: 0;
-      left: 0;
-      border-radius: 50%;
-      opacity: 0.5;
-    }
+        .navbar li {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
 
-    canvas {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      opacity: 0.66;
-    }
+        .navbar li a {
+            display: block;
+            color: #fff;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
 
-    .canvas-back {
-      z-index: 0;
-    }
+        .navbar li img {
+            height: 20px;
+            margin-right: 10px;
+        }
 
-    .canvas-front {
-      z-index: 1;
-    }
-  </style>
+        .content {
+            margin-top: 50px;
+            background-color: #000;
+            color: #fff;
+            position: relative;
+        }
+
+        .section {
+            height: 1170px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ssection {
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .blanksection {
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bblanksection {
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section.black {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .section.gray {
+            background-color: #808080;
+            color: #fff;
+        }
+
+        .section:nth-child(3n + 1) {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .icon {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .navbar.collapsed~.content .icon {
+            opacity: 1;
+        }
+
+        .carousel-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .carousel {
+            width: 80%;
+            height: 80%;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .carousel h1 {
+            position: relative;
+            top: -50px;
+            right: 0;
+            transform: translateY(-50%);
+            margin: 0;
+        }
+
+        .about-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+    <script>
+        window.addEventListener("scroll", function () {
+            var navbar = document.querySelector(".navbar");
+            var icon = document.querySelector(".icon");
+            if (window.pageYOffset > 50) {
+                navbar.classList.add("collapsed");
+                icon.style.opacity = "1";
+            } else {
+                navbar.classList.remove("collapsed");
+                icon.style.opacity = "0";
+            }
+        });
+
+        window.addEventListener("load", function () {
+            var icon = document.querySelector(".icon");
+            var navbar = document.querySelector(".navbar");
+
+            icon.addEventListener("click", function () {
+                if (navbar.classList.contains("collapsed")) {
+                    navbar.classList.remove("collapsed");
+                } else {
+                    navbar.classList.add("collapsed");
+                }
+            });
+        });
+    </script>
 </head>
-<body>
-  <canvas class="canvas-back"></canvas>
-  <canvas class="canvas-front"></canvas>
-  <div class="bug"></div>
-  
-  <script>
-    (function() {
-      var maxOrbits = 5; // 最大軌道數量
-      var maxManPerOrbit = 10; // 每個軌道最大人數量
-      var manCount = 1; // 初始人數量
-      var m = {
-        man: []
-      };
-      var angle = 0;
-      var dragging = false;
-      var dragOffsetX = 0;
-      var dragOffsetY = 0;
-      var manElement = null;
 
-      function createMan() {
-        var man = document.createElement("img");
-        man.src = "img/man.png";
-        man.className = "man";
-        var size = Math.floor(Math.random() * 80) + 20;
-        man.style.width = size + "px";
-        man.style.height = size + "px";
-        document.body.appendChild(man);
-        m.man.push(man);
-      }
+<body style="background-color: #000;">
+    <div class="icon">
+        <img src="/img/PngItem_1608357.png" alt="ICON" style="height: 20px;">
+    </div>
 
-      function initialize() {
-        for (var i = 0; i < manCount; i++) {
-          createMan();
-        }
-      }
 
-      function animate() {
-        requestAnimationFrame(animate);
-        angle += 0.01;
-        var bug = document.querySelector(".bug");
-        var bugX = bug.offsetLeft;
-        var bugY = bug.offsetTop;
+    <div class="navbar">
+        <ul>
+            <li><a href="#">HOME</a></li>
+            <li><a href="#illustration">ILLUSTRATION</a></li>
+            <li><a href="#3d">3D</a></li>
+            <li><a href="#about">ABOUT</a></li>
+        </ul>
+    </div>
+    <div class="content">
 
-        for (var i = 0; i < manCount; i++) {
-          var man = m.man[i];
-          var orbit = i % maxOrbits + 1; // 計算人所在軌道
-          var orbitRadius = 100 + orbit * 50; // 計算軌道半徑
-          var manAngle = angle * (i + 1); // 計算人的角度
 
-          var manX = bugX + Math.cos(manAngle) * orbitRadius;
-          var manY = bugY + Math.sin(manAngle) * orbitRadius;
+        <div id="illustration" class="section black">
+            <div class="carousel-container">
+                <div class="carousel">
+                    <h1>ILLUSTRATION</h1>
+                    <!-- 放置 ILLUSTRATION 輪播內容的程式碼 -->
+                </div>
+            </div>
+        </div>
 
-          man.style.left = manX - man.clientWidth / 2 + "px";
-          man.style.top = manY - man.clientHeight / 2 + "px";
-        }
-      }
 
-      function startDrag(event) {
-        if (event.button === 1) {
-          dragging = true;
-          var man = event.target;
-          dragOffsetX = event.clientX - man.offsetLeft;
-          dragOffsetY = event.clientY - man.offsetTop;
-          manElement = man;
-          man.style.zIndex = "999";
-        }
-      }
+        <div id="3d" class="section gray">
+            <div class="carousel-container">
+                <div class="carousel">
+                    <h1>3D</h1>
+                    <!-- 放置 3D 輪播內容的程式碼 -->
+                </div>
+            </div>
+        </div>
 
-      function endDrag() {
-        dragging = false;
-        manElement.style.zIndex = "";
-        manElement = null;
-      }
+        <div id="blank" class="bblanksection black">
+            <h1></h1>
+        </div>
 
-      function drag(event) {
-        if (dragging && manElement) {
-          manElement.style.left = event.clientX - dragOffsetX + "px";
-          manElement.style.top = event.clientY - dragOffsetY + "px";
+        <div id="about" class="ssection black">
+            <div class="about-container">
+                <h1>ABOUT</h1>
+                <h5>about123about123about123123
+                    <br>about123
+                    <br>about123about123about123about123about123about123about123
+                    <br>
+                    <br>about123about123about123abou
+                    <br>about123about123about123about123about123about123
+                    <br>about123about123about123about123about123about1
+                    <br>about123at123about123about
+                    <br>about123about123about123about123about123about123about123
+                </h5>
 
-          var bodyRect = document.body.getBoundingClientRect();
-          var manRect = manElement.getBoundingClientRect();
-          var minX = bodyRect.left;
-          var minY = bodyRect.top;
-          var maxX = bodyRect.right - manRect.width;
-          var maxY = bodyRect.bottom - manRect.height;
-          var manX = parseInt(manElement.style.left);
-          var manY = parseInt(manElement.style.top);
+                <h4><br><br><div class="alert alert-info" role="alert"><strong></strong>
+                    <a href="index.html" class="alert-link">BUG</a></div></a></h4>
 
-          manElement.style.left = Math.min(Math.max(manX, minX), maxX) + "px";
-          manElement.style.top = Math.min(Math.max(manY, minY), maxY) + "px";
-        }
-      }
+            </div>
+        </div>
+    </div>
 
-      window.addEventListener("resize", initialize);
-      document.addEventListener("DOMContentLoaded", function(event) {
-        initialize();
-        requestAnimationFrame(animate);
-      });
-
-      document.addEventListener("click", function() {
-        if (manCount < maxManPerOrbit * maxOrbits) {
-          manCount++;
-          createMan();
-        }
-      });
-
-      document.addEventListener("mousedown", startDrag);
-      document.addEventListener("mouseup", endDrag);
-      document.addEventListener("mousemove", drag);
-      
-      document.querySelector('.bug').addEventListener('click', function() {
-        window.location.href = 'B.html';
-      });
-    })();
-  </script>
+    <div id="blank" class="bblanksection black">
+        <h1></h1>
+    </div>
 </body>
+
 </html>
