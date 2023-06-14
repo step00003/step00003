@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background-color: rgb(196, 196, 196);
+    }
+
+    body, html {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .bug {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 80px; /* 16px * 5 = 80px */
+      height: 80px; /* 16px * 5 = 80px */
+      transform: translate(-50%, -50%);
+      background-image: url(img/bug.png);
+      background-size: 80px 80px; /* 16px * 5 = 80px */
+    }
+
+    .man {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      cursor: move;
+    }
+
+    .man-trail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+
+    canvas {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      opacity: 0.66;
+    }
+
+    .canvas-back {
+      z-index: 0;
+    }
+
+    .canvas-front {
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas class="canvas-back"></canvas>
+  <canvas class="canvas-front"></canvas>
+  <img class="bug" src="img/bug.png" alt="bug">
+  <script>
+    (function() {
+      var maxOrbits = 5; // 最大軌道數量
+      var maxManPerOrbit = 10; // 每個軌道最大人數量
+      var manCount = 1; // 初始人數量
+      var m = {
+        man: []
+      };
+      var angle = 0;
+      var dragging = false;
+      var dragOffsetX = 0;
+      var dragOffsetY = 0;
+      var manElement = null;
+
+      function createMan() {
+        var man = document.createElement("img");
+        man.src = "img/man.png";
+        man.className = "man";
+        var size = Math.floor(Math.random() * 80) + 20;
+        man.style.width = size + "px";
+        man.style.height = size + "px";
+        document.body.appendChild(man);
+        m.man.push(man);
+      }
+
+      function initialize() {
+        for (var i = 0; i < manCount; i++) {
+          createMan();
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        angle += 0.01;
+        var bug = document.querySelector(".bug");
+        var bugX = bug.offsetLeft;
+        var bugY = bug.offsetTop;
+
+        for (var i = 0; i < manCount; i++) {
+          var man = m.man[i];
+          var orbit = i % maxOrbits + 1; // 計算人所在軌道
+          var orbitRadius = 100 + orbit * 50; // 計算軌道半徑
+          var manAngle = angle * (i + 1); // 計算人的角度
+
+          var manX = bugX + Math.cos(manAngle) * orbitRadius;
+          var manY = bugY + Math.sin(manAngle) * orbitRadius;
+
+          man.style.left = manX - man.clientWidth / 2 + "px";
+          man.style.top = manY - man.clientHeight / 2 + "px";
+        }
+      }
+
+      function startDrag(event) {
+        if (event.button === 1) {
+          dragging = true;
+          var man = event.target;
+          dragOffsetX = event.clientX - man.offsetLeft;
+          dragOffsetY = event.clientY - man.offsetTop;
+          manElement = man;
+          man.style.zIndex = "999";
+        }
+      }
+
+      function endDrag() {
+        dragging = false;
+        manElement.style.zIndex = "";
+        manElement = null;
+      }
+
+      function drag(event) {
+        if (dragging && manElement) {
+          manElement.style.left = event.clientX - dragOffsetX + "px";
+          manElement.style.top = event.clientY - dragOffsetY + "px";
+
+          var bodyRect = document.body.getBoundingClientRect();
+          var manRect = manElement.getBoundingClientRect();
+          var minX = bodyRect.left;
+          var minY = bodyRect.top;
+          var maxX = bodyRect.right - manRect.width;
+          var maxY = bodyRect.bottom - manRect.height;
+          var manX = parseInt(manElement.style.left);
+          var manY = parseInt(manElement.style.top);
+
+          manElement.style.left = Math.min(Math.max(manX, minX), maxX) + "px";
+          manElement.style.top = Math.min(Math.max(manY, minY), maxY) + "px";
+        }
+      }
+
+      window.addEventListener("resize", initialize);
+      document.addEventListener("DOMContentLoaded", function(event) {
+        initialize();
+        requestAnimationFrame(animate);
+      });
+
+      document.addEventListener("click", function() {
+        if (manCount < maxManPerOrbit * maxOrbits) {
+          manCount++;
+          createMan();
+        }
+      });
+
+      document.addEventListener("mousedown", startDrag);
+      document.addEventListener("mouseup", endDrag);
+      document.addEventListener("mousemove", drag);
+    })();
+  </script>
+</body>
+</html>
