@@ -34,13 +34,12 @@
     }
 
     .man-trail {
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 50%;
-  opacity: 0.5;
-}
-
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      opacity: 0.5;
+    }
 
     canvas {
       position: fixed;
@@ -61,7 +60,8 @@
 <body>
   <canvas class="canvas-back"></canvas>
   <canvas class="canvas-front"></canvas>
-  <img class="bug" src="img/bug.png" alt="bug">
+  <div class="bug"></div>
+  
   <script>
     (function() {
       var maxOrbits = 5; // 最大軌道數量
@@ -166,6 +166,10 @@
       document.addEventListener("mousedown", startDrag);
       document.addEventListener("mouseup", endDrag);
       document.addEventListener("mousemove", drag);
+      
+      document.querySelector('.bug').addEventListener('click', function() {
+        window.location.href = 'B.html';
+      });
     })();
   </script>
 </body>
